@@ -49,12 +49,12 @@ def build_parser():
     ap.add_argument("--list-regions", action="store_true",
                     help="показать список регионов схемы и выйти")
     ap.add_argument("--watermark", default=None,
-                    help="водяной знак на страницах (по умолчанию: бренд 'Sake')")
+                    help="водяной знак на страницах (по умолчанию: имя проекта)")
     ap.add_argument("--no-watermark", action="store_true", help="отключить водяной знак")
     ap.add_argument("--title", default=None,
                     help="название гайда на обложке (по умолчанию: имя схемы/файла)")
     ap.add_argument("--description", default=None,
-                    help="описание на обложке (например, ссылка на магазин)")
+                    help="описание на обложке (например, краткая аннотация постройки)")
     ap.add_argument("--force", action="store_true",
                     help=f"обойти лимит объёма региона ({MAX_VOLUME:,} блоков)")
     ap.add_argument("--debug", action="store_true",

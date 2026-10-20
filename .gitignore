@@ -32,6 +32,6 @@ background.jpeg
 # --- Сгенерированные PDF ---
 /*.pdf
 
-# --- Схемы пользователя из коммита вылетают (демо-схема остаётся) ---
+# --- User schematic files stay out of version control (demo is tracked) ---
 *.litematic
-!Villager-House-Sake.litematic
+!villager_house.litematic

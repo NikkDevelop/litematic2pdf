@@ -287,7 +287,7 @@ def _selftest():
     PDF from the bundled sample schematic and reports via a temp file."""
     import tempfile
     base = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parents[2]))
-    src = base / "Villager-House-Sake.litematic"
+    src = base / "villager_house.litematic"
     out_dir = Path(tempfile.gettempdir()) / "opencode"
     out_dir.mkdir(exist_ok=True)
     result = out_dir / "selftest_ok.txt"

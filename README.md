@@ -6,221 +6,210 @@
 ![Python](https://img.shields.io/badge/python-3.9%2B-blue)
 ![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)
 ![Output](https://img.shields.io/badge/output-PDF-orange)
-![License](https://img.shields.io/badge/license-none-red)
 
-**Sake 2D Build Guide** — layer-by-layer PDF build guides from Litematica schematics.
+**Convert Litematica `.litematic` schematics into layer-by-layer PDF build guides.**
 
 </div>
 
 ---
 
-Превращает файл схемы из мода [Litematica](https://www.curseforge.com/minecraft/mc-mods/litematica) (`.litematic`) в PDF-инструкцию для сборки — как IKEA-квест, только для Minecraft.
+litematic2pdf reads a schematic file created in the [Litematica](https://www.curseforge.com/minecraft/mc-mods/litematica) mod and generates a structured PDF instructions document. Each page renders one horizontal construction layer viewed from above, accompanied by the complete block list for that layer with previews and counts. The document concludes with a consolidated materials summary — suitable for printing and offline reference during construction.
 
-На каждой странице — один слой постройки видом сверху и список блоков этого слоя с превью и количеством. В конце — общий список материалов. Готовый продукт, который можно печатать и собирать по нему в игре.
+## Table of Contents
 
-## Содержание
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Graphical interface](#graphical-interface)
+  - [Command line](#command-line)
+  - [Command-line options](#command-line-options)
+  - [Examples](#examples)
+- [PDF contents](#pdf-contents)
+- [Packaging as an executable](#packaging-as-an-executable)
+- [Self-test](#self-test)
+- [Project layout](#project-layout)
+- [Notes](#notes)
+- [Limitations](#limitations)
 
-- [Возможности](#возможности)
-- [Быстрый старт](#быстрый-старт)
-  - [Готовый exe (для друга без Python)](#готовый-exe-для-друга-без-python)
-  - [Из исходников](#из-исходников)
-- [Использование](#использование)
-  - [GUI](#gui)
-  - [CLI](#cli)
-  - [Флаги командной строки](#флаги-командной-строки)
-- [Что получится в PDF](#что-получится-в-pdf)
-- [Сборка exe](#сборка-exe)
-- [Демо-схема и selftest](#демо-схема-и-selftest)
-- [Структура проекта](#структура-проекта)
-- [Частые ситуации](#частые-ситуации)
-- [Ограничения](#ограничения)
-
-## Возможности
+## Features
 
 | | |
 |---|---|
-| **Обложка** | Название и описание, карточка статистики, превью 8 главных материалов настоящими текстурами, легенда символов |
-| **Пошаговая сборка** | Один слой на страницу, снизу вверх: построил нулевой уровень — листаешь дальше |
-| **Настоящие текстуры** | Блоки отрисовываются игровыми текстурами; листва и трава — зелёные, вода — синяя, как в игре |
-| **Профили ступеней** | Ступеньки и полублоки не сливаются с обычными блоками: низ ступеньки затемнён, красная стрелка показывает `facing` (включая углы inner/outer) |
-| **Адаптивный рендер** | Качество подбирается по габаритам слоя (4–24 px/блок), бумага растёт автоматически: ≤64 блоков → A4, ≤140 → A3, дальше → A2 |
-| **Водяной знак** | Многострочная диагональная надпись позади построек + рукописная подпись в углу («Sake» по умолчанию) |
-| **Многорегиональные схемы** | Несколько построек в одном `.litematic` — слой покажет список, выбери нужные |
+| **Cover page** | Custom title and description, statistics card, a preview of the 8 most-used materials rendered with in-game textures, and a symbol legend |
+| **Layer-by-layer build** | One layer per page, ordered bottom-up: complete a level, then turn the page |
+| **Faithful rendering** | Blocks are drawn with actual game textures; leaves and grass are tinted green, water blue, exactly as displayed in game |
+| **Stair and slab profiles** | Stairs and slabs are visually distinct from full blocks: lowered stair sides are shaded and a red arrow indicates the block's facing (including inner/outer corner pieces) |
+| **Adaptive rendering** | Raster quality scales with layer dimensions (4–24 px per block); page size grows automatically: ≤64 blocks → A4, ≤140 → A3, larger → A2. Tall builds are printed in portrait orientation |
+| **Running header** | Every page carries the guide title on the left, "Layer-by-layer Build Guide" on the right, and page numbers |
+| **Watermark** | Configurable multi-line diagonal watermark behind the build plus a signature mark in the corner; can be replaced or fully disabled |
+| **Multi-region schematics** | A `.litematic` with several separate constructions lists them automatically and allows selecting which regions to process |
 
-## Быстрый старт
+## Installation
 
-### Готовый exe (для друга без Python)
-
-`dist\Sake 2D Build Guide.exe` — всё встроено: текстуры, шрифты, Python. Двойной клик → в окне:
-
-1. **«Обзор…»** — выбрать `.litematic`;
-2. ввести **название гайда** и **описание** (лягут на обложку);
-3. выбрать регион/ось, при желании сменить или выключить водяной знак;
-4. **«СОЗДАТЬ PDF»** → дождаться окончания → **«Открыть PDF»**.
-
-> Windows может предупредить «неизвестный издатель» (подписи нет) — «Подробнее → Всё равно запустить».
-
-### Из исходников
-
-Нужен Python 3.9+.
+Requires Python 3.9 or later.
 
 ```bash
-pip install -r requirements.txt       # зависимости (один раз)
-python fetch_textures.py              # скачать текстуры Minecraft (один раз, ~1100 файлов)
-python guide.py                       # GUI-панель
-python make_pdf.py твоя_схема.litematic   # или сразу CLI
+pip install -r requirements.txt       # dependencies (once)
+python fetch_textures.py              # download vanilla block textures (once, ~1100 files)
 ```
 
-Или как полноценный пакет (команды `litematic2pdf`, `litematic2pdf-gui`, `litematic2pdf-fetch` доступны из любой папки):
+Run directly from the checkout:
+
+```bash
+python guide.py                       # graphical interface
+python make_pdf.py your_scheme.litematic   # command line
+```
+
+Or install as a package to expose the console scripts `litematic2pdf`, `litematic2pdf-gui` and `litematic2pdf-fetch` system-wide:
 
 ```bash
 pip install -e .
-litematic2pdf твоя_схема.litematic
+litematic2pdf your_scheme.litematic
 litematic2pdf-gui
 ```
 
-## Использование
+Textures are stored in `textures/` and are not part of the repository — they are downloaded once by `fetch_textures.py`. Without them, blocks are rendered with flat, deterministic colors instead.
 
-### GUI
+## Usage
+
+### Graphical interface
 
 ```bash
 python guide.py
 ```
 
-Tkinter-панель: выбор схемы, название/описание, регион, ось среза, водяной знак, кнопка создания PDF.
+The interface provides schematic selection, guide title and description fields, region selection, cut-axis choice, watermark settings, and a one-click PDF generation with direct open of the result.
 
-### CLI
+### Command line
 
 ```bash
-python make_pdf.py Villager-House-Sake.litematic               # простейший запуск
-python make_pdf.py huge.litematic --axis z --regions kitchen   # вертикальный срез, один регион
-python make_pdf.py build.litematic --title "Мой дом" --page a3 # обложка и фиксированная бумага
+python make_pdf.py villager_house.litematic
+python make_pdf.py huge.litematic --axis z --regions kitchen
+python make_pdf.py build.litematic --title "Modern house" --page a3
 ```
 
-### Флаги командной строки
+### Command-line options
 
-| Флаг | Что делает |
+| Option | Description |
 |---|---|
-| `-o file.pdf` | имя итогового файла |
-| `--title "..."` / `--description "..."` | название и описание на обложку |
-| `--scale N` | пикселей на блок (по умолчанию подбирается по габариту: 4–24) |
-| `--max-size N` | жёсткий потолок размера слоя в px (по умолчанию 8192) |
-| `--page auto\|a4\|a3\|a2` | размер бумаги (auto подбирает под постройку) |
-| `--axis y\|x\|z` | ось среза: `y` — по слоям, `x`/`z` — разрез сбоку |
-| `--list-regions` | показать список регионов схемы |
-| `--regions kitchen,cellar` | вывести только указанные регионы |
-| `--no-grid` | без координатной сетки |
-| `--watermark "текст"` / `--no-watermark` | свой знак вместо «Sake» / без знака |
-| `--background фото.jpg` | фон страниц вместо бежевого (или файл `background.png` рядом со схемой) |
-| `--textures-dir path` | своя папка с текстурами |
-| `--force` | пропустить проверку «слишком большая схема» (лимит 2 млн блоков) |
-| `--debug` | полный трейсбек при неизвестной ошибке |
-| `--version` | версия утилиты |
+| `-o file.pdf` | output file name |
+| `--title "..."` / `--description "..."` | cover page title and description |
+| `--scale N` | pixels per block (default: 4–24, auto-selected from build dimensions) |
+| `--max-size N` | hard limit on layer raster size in px (default: 8192) |
+| `--page auto\|a4\|a3\|a2` | paper size (default: auto-selected from the build) |
+| `--axis y\|x\|z` | cut axis: `y` horizontal layers, `x`/`z` vertical side sections |
+| `--list-regions` | print the scheme's regions and exit |
+| `--regions kitchen,cellar` | process only the listed regions |
+| `--no-grid` | omit the coordinate grid |
+| `--watermark "text"` / `--no-watermark` | replace or disable the default page watermark |
+| `--background image.jpg` | page background image (default: `background.png` near the schematic if present) |
+| `--textures-dir path` | custom block texture directory |
+| `--force` | bypass the schematic size guard (2 million blocks) |
+| `--debug` | show a full traceback on unexpected errors |
+| `--version` | print version |
 
-## Что получится в PDF
+## PDF contents
 
-- **Running header**: название гайда слева, «Layer-by-layer Build Guide» справа, страницы пронумерованы.
-- Один слой на страницу: подпись (`Layer Y=3 (4/9 from bottom) — 65 blocks`) и полный список блоков слоя с превью side/top (например, «23x Spruce Planks»).
-- Фонарь рисуется картинкой `lantern.png` (лежит рядом с программой/схемой): белый фон вырезается, картинка вписывается в клетку.
-- Координатная сетка по краям страницы; на плотных сетках подписи идут каждые 5/10/25 клеток.
-- В слое больше 29 видов блоков — сайдбар показывает топ-29 и «…and N more types».
-- Огромные слои не убивают память: слои кодируются в PNG по ходу дела (тест: полость 260×200×40 блоков — 11 секунд, PDF 406 КБ, 42 страницы A2).
-- Вытянутые вверх постройки печатаются портретно.
-- Сам PDF на английском языке.
+- One page per layer: caption in the form `Layer Y=3 (4/9 from bottom) — 65 blocks` and the layer's complete block list with side/top previews (e.g. "23x Spruce Planks").
+- Real block textures; the lantern is drawn from `lantern.png` (resolved next to the program or schematic) with a transparent background and fitted into its cell.
+- Coordinate grid with edge labels; on dense grids, labels are printed every 5/10/25 cells to remain readable.
+- Layers with more than 29 distinct block types show the top 29 plus "…and N more types".
+- Large layers are encoded to PNG incrementally, so memory use stays flat (measured: a hollow 260×200×40-block build — 11 s, 406 KB PDF, 42 A2 pages).
+- The generated PDF is in English; pages are numbered and carry a running header.
 
-## Сборка exe
+## Packaging as an executable
 
 ```bash
 pip install pyinstaller
-pyinstaller --noconfirm "Sake 2D Build Guide.spec"
+pyinstaller --noconfirm litematic2pdf.spec
 ```
 
-Готовый файл — в `dist\`.
+The resulting executable is written to `dist\`. Bundled payload includes block textures, fonts, and the demo schematic; all data is referenced from `litematic2pdf.spec`, so the built exe requires no external files.
 
-То же самое одной строкой, если spec не нужен:
+Equivalent single-line invocation, when a spec file is not desired:
 
 ```bash
-pyinstaller --noconfirm --onefile --windowed --name "Sake 2D Build Guide" ^
-  --paths src --add-data "textures;textures" --add-data "lantern.png;." ^
-  --add-data "Villager-House-Sake.litematic;." guide.py
+pyinstaller --noconfirm --onefile --windowed --paths src ^
+  --add-data "textures;textures" --add-data "lantern.png;." ^
+  --add-data "villager_house.litematic;." guide.py
 ```
 
-## Демо-схема и selftest
+## Self-test
 
 <details>
-<summary><b>Как проверить сборку</b></summary>
+<summary><b>Verifying an assembled build</b></summary>
 
-`Villager-House-Sake.litematic` — демо-схема домика деревенских жителей. С exe она идёт вшитой и позволяет проверить себя:
+The bundled demo schematic (a small villager house) enables a headless self-test of the executable:
 
 ```bash
-dist\"Sake 2D Build Guide.exe" --selftest
+dist\litematic2pdf.exe --selftest
 ```
 
-Соберёт тестовый PDF из встроенной схемы — если он открывается, сборка рабочая.
+It runs the full pipeline internally and reports success — if a PDF is produced, the build is functional.
 
 </details>
 
-## Структура проекта
+## Project layout
 
 <details>
-<summary><b>Дерево файлов</b></summary>
+<summary><b>File tree</b></summary>
 
 ```
 litematic2pdf/
-├── guide.py                       — GUI лаунчер (и точка входа exe)
-├── make_pdf.py                    — CLI лаунчер
-├── fetch_textures.py              — лаунчер скачивания текстур
-├── pyproject.toml                 — пакет, зависимости, консольные команды
-├── requirements.txt               — runtime-зависимости
-├── lantern.png                    — картинка фонаря для схем (вместо спрайта)
-├── Sake 2D Build Guide.spec       — spec для PyInstaller
-├── Villager-House-Sake.litematic  — демо-схема (selftest, сборка exe)
+├── guide.py                    — GUI launcher (and exe entry point)
+├── make_pdf.py                 — CLI launcher
+├── fetch_textures.py           — texture download launcher
+├── pyproject.toml              — package metadata, dependencies, console scripts
+├── requirements.txt            — runtime dependencies
+├── lantern.png                 — lantern image used for schematic rendering
+├── litematic2pdf.spec          — PyInstaller build specification
+├── villager_house.litematic    — demo schematic (self-test, exe bundling)
 ├── src/litematic2pdf/
-│   ├── __init__.py                — бренд и версия
-│   ├── __main__.py                — запуск как `python -m litematic2pdf`
-│   ├── blocks.py                  — палитры блоков, тонировка, имена, форма ступенек/полублоков
-│   ├── textures.py                — поиск top/side-текстур, оверрайды
-│   ├── schema.py                  — чтение .litematic (NBT), регионы, срезы
-│   ├── render.py                  — растер слоя: блоки, тени, красные стрелки, координаты
-│   ├── fonts.py                   — основной и подписной (рукописный) шрифты
-│   ├── pdf.py                     — обложка, страницы слоёв, материалы, водяной знак
-│   ├── cli.py                     — аргументы и основной конвейер
-│   ├── gui.py                     — tkinter-панель
-│   ├── fetch.py                   — загрузчик ванильных текстур
-│   └── errors.py                  — пользовательские ошибки
-└── textures/block/                — текстуры (не в git, качаются fetch_textures.py)
+│   ├── __init__.py             — package constants and version
+│   ├── __main__.py             — enables `python -m litematic2pdf`
+│   ├── blocks.py               — block palette, tinting, naming, stair/slab profiles
+│   ├── textures.py             — top/side texture resolution, overrides
+│   ├── schema.py               — .litematic (NBT) parsing, regions, slicing
+│   ├── render.py               — layer rasterization: blocks, shadows, arrows, grid
+│   ├── fonts.py                — primary and signature (handwritten) fonts
+│   ├── pdf.py                  — cover, layer pages, materials summary, watermark
+│   ├── cli.py                  — argument parsing and the main pipeline
+│   ├── gui.py                  — Tkinter interface panel
+│   ├── fetch.py                — vanilla texture downloader
+│   └── errors.py               — user-facing error types
+└── textures/block/             — textures (not in git; downloaded via fetch_textures.py)
 ```
 
 </details>
 
 <details>
-<summary><b>Этапы конвейера</b></summary>
+<summary><b>Pipeline overview</b></summary>
 
-1. `schema.py` читает NBT-структуру `.litematic`, находит регионы и выбранную ось среза;
-2. `render.py` растеризует каждый слой в PNG (по ходу дела, чтобы не держать всё в памяти);
-3. `blocks.py`/`textures.py` подбирают настоящие top/side-текстуры и цвета тонировки;
-4. `pdf.py` собирает обложку, страницы слоёв и материал-лист (ReportLab);
-5. `gui.py` — обёртка над `cli.py` для двойного клика мышью.
+1. `schema.py` parses the NBT structure, locates regions and applies the chosen cut axis;
+2. `render.py` rasterizes each layer to PNG as it goes, keeping peak memory flat;
+3. `blocks.py` / `textures.py` resolve actual top/side textures and tint colors;
+4. `pdf.py` assembles the cover, layer pages and materials sheet (ReportLab);
+5. `gui.py` wraps `cli.py` for point-and-click use.
 
 </details>
 
-> Важно: лаунчеры названы `guide.py`/`make_pdf.py`, а не `litematic2pdf.py` — файл с именем пакета в корне затенял бы его при импорте и сборке.
+> Note: the launchers are named `guide.py` / `make_pdf.py` rather than `litematic2pdf.py` — a root-level file sharing its name with the package would shadow it during import and exe assembly.
 
-## Частые ситуации
+## Notes
 
-**Схема из старой Litematica или с «отрицательным» регионом** — подхватится автоматически, форматы Size/Position обоих видов поддерживаются.
+**Legacy or "negative" region sizing** — handled automatically; both older and current Litematica `Size`/`Position` formats are supported.
 
-**Хочу разрез не по горизонтали, а сбоку** — `--axis z` или `--axis x` (стены, фасады).
+**Vertical (side) sections** — `--axis x` or `--axis z` render a cut suitable for facades and walls.
 
-**В схеме несколько построек (регионов)** — `--list-regions` покажет список, а `--regions kitchen,cellar` выведет только нужные.
+**Multiple constructions in one schematic** — `--list-regions` enumerates them; `--regions kitchen,cellar` restricts output to the selected ones.
 
-**Не нравятся картинки, нужны просто цвета** — не запускай `fetch_textures.py`, блоки закрасятся плоскими цветами (незнакомым блокам — стабильный свой цвет).
+**Flat colors instead of textures** — simply skip `fetch_textures.py`; unknown blocks receive stable dedicated colors.
 
-**Хочется фон покрасивее бежевого** — положи рядом со схемой `background.png` (или `--background фото.jpg`): фото ляжет под все страницы.
+**Custom page background** — place a `background.png` next to the schematic or pass `--background photo.jpg`; the image underlays all pages.
 
-## Ограничения
+## Limitations
 
-- Текстуры Minecraft принадлежат Mojang; скрипт качает их с неофициального зеркала ассетов — ок для личного использования, не для репостов.
-- Одна страница = один слой. Для гигантских построек PDF выйдет толстым — это осознанно, так удобнее собирать.
-- Ориентиры в виде сверху: север вверху страницы, восток справа.
-- exe не подписан — SmartScreen ругается на всё неизвестное.
+- Minecraft textures are the property of Mojang; this tool downloads them from an unofficial asset mirror. Personal use only — do not redistribute.
+- One page equals one layer; very large builds produce proportionally thicker PDFs. This is intentional and convenient during construction.
+- Orientation in top-down view: north at the top of the page, east on the right.
+- The Windows executable is unsigned; SmartScreen will warn on first launch.

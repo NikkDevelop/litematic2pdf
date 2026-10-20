@@ -1,7 +1,7 @@
 """litematic2pdf — layer-by-layer PDF build guides from Litematica schematics."""
 
-# watermark / corner signature brand
-BRAND = "Sake"
+# default watermark / corner signature text
+BRAND = "litematic2pdf"
 
 
 
