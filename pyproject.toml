@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "litematic2pdf"
+version = "1.0.0"
+description = "Layer-by-layer PDF build guides from Litematica (.litematic) schematics"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = [
+    "nbtlib>=2.0",
+    "Pillow>=10",
+    "reportlab>=4",
+]
+
+[project.scripts]
+litematic2pdf = "litematic2pdf.cli:main"
+litematic2pdf-gui = "litematic2pdf.gui:main"
+litematic2pdf-fetch = "litematic2pdf.fetch:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]

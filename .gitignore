@@ -1,0 +1,37 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+*.egg
+
+# --- Виртуальные окружения ---
+.venv/
+venv/
+env/
+ENV/
+
+# --- Кеш инструментов / IDE ---
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.vscode/
+.idea/
+
+# --- Текстуры Minecraft (скачиваются fetch_textures.py, не в git) ---
+textures/
+
+# --- Локальные фоны страниц ---
+background.png
+background.jpg
+background.jpeg
+
+# --- Сгенерированные PDF ---
+/*.pdf
+
+# --- Схемы пользователя из коммита вылетают (демо-схема остаётся) ---
+*.litematic
+!Villager-House-Sake.litematic
